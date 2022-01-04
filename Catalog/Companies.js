@@ -3,6 +3,7 @@ import { StyleSheet, FlatList, Text, SafeAreaView } from "react-native";
 
 export default function Companies() {
   const [companies, setCompanies] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const renderItem = ({ item }) => (
     <Text>
@@ -15,13 +16,15 @@ export default function Companies() {
   }, []);
 
   const getCompanies = () => {
+    setIsLoading(true);
     let URL = "http://potcat.test/api/companies";
     fetch(URL)
       .then((response) => response.json())
       .then((json) => setCompanies(json.data))
       .catch((error) => {
         console.error(error);
-      });
+      })
+      .finally(() => setIsLoading(false));
   };
 
   return (
@@ -30,6 +33,8 @@ export default function Companies() {
         data={companies}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
+        onRefresh={getCompanies}
+        refreshing={isLoading}
       ></FlatList>
     </SafeAreaView>
   );
