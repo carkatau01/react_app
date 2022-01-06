@@ -15,17 +15,47 @@ export default function Account() {
 
   const storeToken = async (value) => {
     try {
-      await AsyncStorage.setitem("token", value);
+      await AsyncStorage.setItem("token", value);
     } catch (e) {
-      console.log("cant save token");
+      console.log("cant save token" + e);
     }
   };
 
-  async function clearToken() {
-    AsyncStorage.removeItem("token");
-  }
+  const clearToken = async function () {
+    try {
+      await AsyncStorage.removeItem("token");
+    } catch (error) {
+      console.error("Error clearing app data.");
+    }
+  };
 
-  function submitHandler() {}
+  function submitHandler() {
+    const requestOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: username,
+        password: password,
+      }),
+    };
+    fetch("http://potcat.test/api/auth/token", requestOptions)
+      .then((res) => {
+        return res.json();
+      })
+      .then((res) => {
+        if (res.access_token !== "" && res.error !== "Unauthorized") {
+          storeToken(res.access_token);
+          console.log("GOT TOKEN!");
+        } else {
+          console.log("GOT ERROR OR EMPTY RESULT");
+        }
+      })
+      .catch(function (error) {
+        console.log("GOT ERROR " + error);
+      });
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -33,16 +63,21 @@ export default function Account() {
         defaultValue={username}
         onChangeText={(text) => setUsername(text)}
         placeholder="Username"
+        autoCorrect={false}
+        autoCapitalize="none"
         style={styles.input}
       ></TextInput>
       <TextInput
         defaultValue={password}
+        autoCapitalize="none"
+        autoCorrect={false}
         onChangeText={(text) => setPassword(text)}
         placeholder="Password"
         style={styles.input}
         secureTextEntry={true}
       ></TextInput>
-      <Button title="Login"></Button>
+      <Button title="Login" onPress={submitHandler}></Button>
+      <Button title="Logout" onPress={clearToken}></Button>
     </SafeAreaView>
   );
 }
@@ -59,7 +94,7 @@ const styles = StyleSheet.create({
     height: 48,
     padding: 10,
     borderWidth: 1,
-    borderColor: "black",
+    borderColor: "#6b6b6b",
     marginBottom: 10,
     borderRadius: 8,
   },
